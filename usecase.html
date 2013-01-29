@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>HTML5 video description test</title>
+	<meta name="title" content="HTML5 video description test">
+	<meta name="description" content="Test use of the HTML5 video tag for DVX description of video">
+	<meta name="keywords" content="HTML5, video description, extended description, media, accessibility">
+	<style>
+	</style>
+	<!-- <script src="http://code.jquery.com/jquery-git.js"></script>
+	<script src="https://getfirebug.com/firebug-lite-debug.js"></script> -->
+	<script src="mediagroup.js/src/mediagroup.js"></script>
+	<script type="text/javascript">
+		function myPlayPause() {
+			var mediaController = document.querySelectorAll('video')[0].controller;
+			if (mediaController.paused)
+				mediaController.play();
+			else
+				mediaController.pause();
+		}
+		function getTimecode() {
+			var myVideo = document.getElementsByTagName('video')[0];
+			//var endBuf = myVideo.buffered.end(0);
+			//var soFar = parseInt(((endBuf / myVideo.duration) * 100));
+			document.getElementById("loadStatus").innerHTML =  myVideo.currentTime + ' secs';
+		}
+		function myFixAutoPlay(){
+			// Fix autoplay:
+			// In order for the separate audio/video tracks to work correctly with the mediaController,
+			//  we have to set them with 'autoplay' otherwise they won't play. But, if we don't want the
+			//  mediaController to autoplay, we need to pause it here.
+			var mediaController = document.querySelectorAll('video')[0].controller;
+			//mediaController.pause();
+		}
+		function myAddListeners(){
+			var mediaController = document.querySelectorAll('video')[0].controller;
+			mediaController.addEventListener('timeupdate', getTimecode, false);
+			mediaController.addEventListener('canplay', myFixAutoPlay, false);
+
+			var myVideo = document.getElementsByTagName('video')[0];
+			myVideo.addEventListener('timeupdate', controlInlineDescription, false);
+
+			var myAudio = document.getElementsByTagName('audio')[0];
+			myAudio.addEventListener('timeupdate', controlExtendedDescription, false);
+			
+			mediaController.addEventListener('pause', pauseInlineDescription, false);
+			mediaController.addEventListener('play', playInlineDescription, false);
+			
+		}
+		function pauseInlineDescription(){
+			var myAudio = document.getElementsByTagName('audio')[0];
+			if ( !myAudio.paused ) myAudio.pause();
+		}
+		function playInlineDescription(){
+			var myAudio = document.getElementsByTagName('audio')[0];
+			if ( myAudio.paused ) myAudio.play();
+		}
+		function controlInlineDescription(){
+			var myVideo = document.getElementsByTagName('video')[0];
+			var myAudio = document.getElementsByTagName('audio')[0];
+			if ( myVideo.currentTime >= 11.0 ) {}
+			else if ( ( myVideo.currentTime < 11.0 ) && ( myVideo.currentTime >= 10.0 ) &&  myAudio.paused ) myAudio.play();
+			else if ( ( myVideo.currentTime < 10.0 ) && ( myVideo.currentTime >=  5.0 ) && !myAudio.paused ) myAudio.pause();
+			else if ( ( myVideo.currentTime <  5.0 ) && ( myVideo.currentTime >=  0.0 ) &&  myAudio.paused ) myAudio.play();
+
+		}
+		function controlExtendedDescription(){
+			var myVideo = document.getElementsByTagName('video')[0];
+			var myAudio = document.getElementsByTagName('audio')[0];
+			if ( myAudio.currentTime >= 21.0 ) {}
+			else if ( ( myAudio.currentTime < 21.0 ) && ( myAudio.currentTime >= 20.0 ) &&  myVideo.paused ) myVideo.play();
+			else if ( ( myAudio.currentTime < 20.0 ) && ( myAudio.currentTime >= 15.0 ) && !myVideo.paused ) myVideo.pause();
+
+		}
+		function repeatLastDescription() {
+			var mediaController = document.querySelectorAll('video')[0].controller;
+			mediaController.currentTime = 10.0;
+			var myAudio = document.getElementsByTagName('audio')[0];
+			myAudio.currentTime = 5.0;
+		}
+</script>
+</head>
+
+<body onload="myAddListeners()">
+
+	<video class="controller" controls autoplay mediagroup="described_video">
+		<source src="mediagroup.js/test/assets/popcorntest.mp4"></source>
+		<source src="mediagroup.js/test/assets/popcorntest.ogv"></source>
+		<source src="mediagroup.js/test/assets/popcorntest.webm"></source>
+	</video>
+
+<!-- This audio is controlled by the same mediaController as the video, 
+     so it always plays in sync with the video. It is suitable for a
+	 monolithic, inline description track.
+-->
+<!--
+	<audio autoplay mediagroup="described_video">
+		<source src="411.mp3"></source>
+		<source src="411.ogg"></source>
+	</audio>
+-->
+
+<!-- This audio is NOT controlled by the same mediaController as the video.
+     It would be more suitable for an extended description track.
+-->
+	<audio>
+		<source src="411.mp3"></source>
+		<source src="411.ogg"></source>
+	</audio>
+
+	<div class="video-player-controls">
+		<p id="loadStatus">MOVIE LOADING...</p>
+		<!-- Note: this button is accessible using "Alt-p" -->
+		<input type="button" onclick="myPlayPause()" accesskey="p" value="Play/Pause">
+		<input type="button" onclick="repeatLastDescription()" accesskey="r" value="Repeat">
+	</div>
+
+</body>
+
+</html>
