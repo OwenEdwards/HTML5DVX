@@ -13,18 +13,36 @@
 	<script src="https://getfirebug.com/firebug-lite-debug.js"></script> -->
 	<script src="mediagroup.js/src/mediagroup.js"></script>
 	<script type="text/javascript">
+		// This structure should clearly be an XML file!!
+		var descriptionList = [ [2.0, 5.0, "inline"], [10.0, 5.0, "inline"], [25.0, 5.0, "extended"] ];
+		var currentPlayedDescription = 0;
+		var inInlineDescription = false;
+		var inExtendedDescription = false;
+		var lastDescriptionVideoTime = -1;
+		var lastDescriptionAudioTime = -1;
+		var lastDescriptionCurrent = 0;
+		
 		function myPlayPause() {
 			var mediaController = document.querySelectorAll('video')[0].controller;
-			if (mediaController.paused)
+			var myAudio = document.getElementsByTagName('audio')[0];
+
+			if (mediaController.paused) {
 				mediaController.play();
-			else
+				if ( inInlineDescription ) myAudio.play();
+				else myAudio.pause();
+			} else {
 				mediaController.pause();
+				if ( inInlineDescription ) myAudio.pause();
+			}
 		}
-		function getTimecode() {
+		var prevCurrentTime = 0;
+		function showTimecode() {
 			var myVideo = document.getElementsByTagName('video')[0];
 			//var endBuf = myVideo.buffered.end(0);
 			//var soFar = parseInt(((endBuf / myVideo.duration) * 100));
-			document.getElementById("loadStatus").innerHTML =  myVideo.currentTime + ' secs';
+			var myCurrentTime = myVideo.currentTime;
+			document.getElementById("loadStatus").innerHTML =  parseInt(myCurrentTime * 100)/100 + ' secs, delta = ' + parseInt((myCurrentTime - prevCurrentTime) * 100)/100 + ' secs';
+			prevCurrentTime = myCurrentTime;
 		}
 		function myFixAutoPlay(){
 			// Fix autoplay:
@@ -36,11 +54,11 @@
 		}
 		function myAddListeners(){
 			var mediaController = document.querySelectorAll('video')[0].controller;
-			mediaController.addEventListener('timeupdate', getTimecode, false);
+			mediaController.addEventListener('timeupdate', controlInlineDescription, false);
 			mediaController.addEventListener('canplay', myFixAutoPlay, false);
 
-			var myVideo = document.getElementsByTagName('video')[0];
-			myVideo.addEventListener('timeupdate', controlInlineDescription, false);
+			//var myVideo = document.getElementsByTagName('video')[0];
+			//myVideo.addEventListener('timeupdate', controlInlineDescription, false);
 
 			var myAudio = document.getElementsByTagName('audio')[0];
 			myAudio.addEventListener('timeupdate', controlExtendedDescription, false);
@@ -48,6 +66,9 @@
 			mediaController.addEventListener('pause', pauseInlineDescription, false);
 			mediaController.addEventListener('play', playInlineDescription, false);
 			
+			currentPlayedDescription = 0;
+			inInlineDescription = false;
+			inExtendedDescription = false;
 		}
 		function pauseInlineDescription(){
 			var myAudio = document.getElementsByTagName('audio')[0];
@@ -58,17 +79,42 @@
 			if ( myAudio.paused ) myAudio.play();
 		}
 		function controlInlineDescription(){
+			showTimecode();
+
+			var mediaController = document.querySelectorAll('video')[0].controller;
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
-			if ( myVideo.currentTime >= 11.0 ) {}
-			else if ( ( myVideo.currentTime < 11.0 ) && ( myVideo.currentTime >= 10.0 ) &&  myAudio.paused ) myAudio.play();
-			else if ( ( myVideo.currentTime < 10.0 ) && ( myVideo.currentTime >=  5.0 ) && !myAudio.paused ) myAudio.pause();
-			else if ( ( myVideo.currentTime <  5.0 ) && ( myVideo.currentTime >=  0.0 ) &&  myAudio.paused ) myAudio.play();
 
+			if ( inInlineDescription ) {
+				if ( ( mediaController.currentTime >= ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) ) {
+					if ( !myAudio.paused ) myAudio.pause();
+					inInlineDescription = false;
+					currentPlayedDescription = currentPlayedDescription + 1;
+					
+					if ( currentPlayedDescription >= descriptionList.length ) {
+						currentPlayedDescription = currentPlayedDescription - 1;
+					}
+					document.getElementById("DescriptionDebug").innerHTML = "Waiting for description " + currentPlayedDescription;
+				}
+			} else {
+				if ( ( mediaController.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( mediaController.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "inline" == descriptionList[currentPlayedDescription][2] ) ) {
+					if ( myAudio.paused ) myAudio.play();
+					inInlineDescription = true;
+					lastDescriptionVideoTime = mediaController.currentTime;
+					lastDescriptionAudioTime = myAudio.currentTime;
+					lastDescriptionCurrent = currentPlayedDescription;
+
+					document.getElementById("repeatLast").disabled = false;
+
+					document.getElementById("DescriptionDebug").innerHTML = "Inline description " + currentPlayedDescription;
+				}
+			}
 		}
 		function controlExtendedDescription(){
+			var mediaController = document.querySelectorAll('video')[0].controller;
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
+
 			if ( myAudio.currentTime >= 21.0 ) {}
 			else if ( ( myAudio.currentTime < 21.0 ) && ( myAudio.currentTime >= 20.0 ) &&  myVideo.paused ) myVideo.play();
 			else if ( ( myAudio.currentTime < 20.0 ) && ( myAudio.currentTime >= 15.0 ) && !myVideo.paused ) myVideo.pause();
@@ -76,19 +122,35 @@
 		}
 		function repeatLastDescription() {
 			var mediaController = document.querySelectorAll('video')[0].controller;
-			mediaController.currentTime = 10.0;
 			var myAudio = document.getElementsByTagName('audio')[0];
-			myAudio.currentTime = 5.0;
+
+			if ( ( lastDescriptionVideoTime >= 0 ) && ( lastDescriptionAudioTime >= 0 ) ) {
+				mediaController.currentTime = lastDescriptionVideoTime;
+				myAudio.currentTime = lastDescriptionAudioTime;
+				if ( !inInlineDescription ) {
+					if ( myAudio.paused ) myAudio.play();
+					inInlineDescription = true;
+					currentPlayedDescription = lastDescriptionCurrent;
+					document.getElementById("DescriptionDebug").innerHTML = "Inline description " + currentPlayedDescription;
+				}
+			}
 		}
 </script>
 </head>
 
 <body onload="myAddListeners()">
 
+<!--
 	<video class="controller" controls autoplay mediagroup="described_video">
 		<source src="mediagroup.js/test/assets/popcorntest.mp4"></source>
 		<source src="mediagroup.js/test/assets/popcorntest.ogv"></source>
 		<source src="mediagroup.js/test/assets/popcorntest.webm"></source>
+	</video>
+-->
+	<video class="controller" controls autoplay mediagroup="described_video">
+		<source src="http://archive.org/download/ElephantsDream/ed_1024_512kb.mp4"></source>
+		<source src="http://archive.org/download/ElephantsDream/ed_1024.ogv"></source>
+		<source src="http://archive.org/download/ElephantsDream/ed_1024.avi"></source>
 	</video>
 
 <!-- This audio is controlled by the same mediaController as the video, 
@@ -103,7 +165,7 @@
 -->
 
 <!-- This audio is NOT controlled by the same mediaController as the video.
-     It would be more suitable for an extended description track.
+     It is more suitable for an extended description track.
 -->
 	<audio>
 		<source src="411.mp3"></source>
@@ -112,9 +174,10 @@
 
 	<div class="video-player-controls">
 		<p id="loadStatus">MOVIE LOADING...</p>
+		<p id="DescriptionDebug">DescriptionDebug</p>
 		<!-- Note: this button is accessible using "Alt-p" -->
 		<input type="button" onclick="myPlayPause()" accesskey="p" value="Play/Pause">
-		<input type="button" onclick="repeatLastDescription()" accesskey="r" value="Repeat">
+		<input type="button" onclick="repeatLastDescription()" accesskey="r" value="Skip to Recent Description" disabled id="repeatLast">
 	</div>
 
 </body>
