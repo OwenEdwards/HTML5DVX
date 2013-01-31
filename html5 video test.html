@@ -2,30 +2,17 @@
 <html lang="en">
 	<head>
 
-		<title>WearaBraille, a virtual wireless Braille keyboard, with an iPhone and VoiceOver - YouTube</title>
+		<title>HTML5 video tag test</title>
 		
-		<meta name="title" content="WearaBraille, a virtual wireless Braille keyboard, with an iPhone and VoiceOver">
-
-		<meta name="description" content="Dr. Joshua Miele demonstrates the WearaBraille, a new virtual wireless Braille keyboard, as an input device to an iPhone running the built-in VoiceOver scree...">
-
-		<meta name="keywords" content="Braille, virtual keyboard, assistive technology, iPhone, VoiceOver, CSUN, Dr Joshua Miele, Smith-Kettlewell, RERC, NIDRR">
-
-		<meta property="og:url" content="http://www.youtube.com/watch?v=G_QWtUFFAFQ">
-		<meta property="og:title" content="WearaBraille, a virtual wireless Braille keyboard, with an iPhone and VoiceOver">
-		<meta property="og:description" content="Dr. Joshua Miele demonstrates the WearaBraille, a new virtual wireless Braille keyboard, as an input device to an iPhone running the built-in VoiceOver scree...">
-		<meta property="og:type" content="video">
-		<meta property="og:image" content="http://i4.ytimg.com/vi/G_QWtUFFAFQ/mqdefault.jpg">
-		<meta property="og:video" content="http://www.youtube.com/v/G_QWtUFFAFQ?version=3&amp;autohide=1">
-		<meta property="og:video:type" content="application/x-shockwave-flash">
-		<meta property="og:video:width" content="640">
-		<meta property="og:video:height" content="480">
-		<meta property="og:site_name" content="YouTube">
+		<meta name="title" content="HTML5 video tag test">
+		<meta name="description" content="Test use of the HTML5 video tag for DVX description of video">
+		<meta name="keywords" content="HTML5, video description, extended description, media, accessibility">
 
     <script type="text/javascript">
         // listener function changes src
         function myNewSrc() {
             var myVideo = document.getElementsByTagName('video')[0];
-            myVideo.src = "https://dl.dropbox.com/u/5295617/The_Matrix.ogv";
+            myVideo.src = "https://www.dropbox.com/s/jv2zmrz2pn1m54g/The_Matrix.ogv";
             myVideo.load();
             myVideo.play();
         }
@@ -48,12 +35,13 @@
 			//var mediaController = myVideo.controller;
 			//mediaController.play();
 			
-			var myVideos = document.querySelectorAll('video');
-			var mediaController = new MediaController();
-			myVideos[0].controller = mediaController;
-			myVideos[1].controller = mediaController;
-			//myVideos[0].play;
-			//myVideos[1].play;
+			//var myVideos = document.getElementsByTagName('video');
+			//var mediaController = new MediaController();
+
+			//for (i=0; i< myVideos.length; i++) {
+			//	myVideos[i].controller = mediaController;
+			//}
+
 			//mediaController.play()
        }
        // add a listener function to the ended event
@@ -78,29 +66,27 @@
 
 	</head>
 	
-	<!-- machid: paDBhT09zMHBuaGVNRUVBRU83akFlem1wc2JsVXB1dFpOMjd0STN0bzlpS2pkR3JuV01WTlBn -->
-	
-	<body dir="ltr" class="  ltr  webkit webkit-537    site-left-aligned  exp-new-site-width  exp-watch7-comment-ui  hitchhiker-enabled      guide-enabled sidebar-expanded       guide-collapsed   " onload="myAddListener()">
-<!--
-		<video id="G_QWtUFFAFQ" src="http://r19---sn-nwj7kne6.c.youtube.com/videoplayback?ratebypass=yes&amp;ipbits=8&amp;sparams=cp%2Cid%2Cip%2Cipbits%2Citag%2Cratebypass%2Csource%2Cupn%2Cexpire&amp;source=youtube&amp;upn=vtNvZbPwPp4&amp;key=yt1&amp;ip=204.28.120.190&amp;sver=3&amp;cp=U0hUTVlMVV9LU0NONF9RRllEOnJIVFRMblhkMGJi&amp;ms=au&amp;newshard=yes&amp;fexp=900161%2C901463%2C920704%2C912806%2C922403%2C922405%2C929901%2C913605%2C925710%2C929104%2C929110%2C908493%2C920201%2C913302%2C919009%2C911116%2C910221%2C901451&amp;id=1bf416b541450054&amp;expire=1358917369&amp;mv=m&amp;mt=1358894237&amp;itag=43&amp;signature=40395112390188C9FE6E41901E713B08D14F70A8.A3AF89FC455FD9E81E60639375825A3B027FB197" controls></video>
--->
+	<body onload="myAddListener()">
 
-		<video id="WearaBraille">
-			<source src="https://dl.dropbox.com/u/5295617/WearaBraille_edited_by_Apple_.webm" type="video/webm">
-			<source src="https://dl.dropbox.com/u/5295617/WearaBraille_edited_by_Apple_.ogv" type="video/ogg">
+		<video id="WearaBraille" mediagroup="myTest">
+
+			<source src="https://dl.dropbox.com/u/5295617/HTML5%20video/WearaBraille_edited_by_Apple_.webm" type="video/webm">
+			<source src="https://dl.dropbox.com/u/5295617/HTML5%20video/WearaBraille_edited_by_Apple_.ogv" type="video/ogg">
 			Your browser does not support the video tag.
 		</video>
 
-		<video id="Matrix">
-			<source src="https://dl.dropbox.com/u/5295617/The_Matrix.webm" type="video/webm">
-			<source src="https://dl.dropbox.com/u/5295617/The_Matrix.ogv" type="video/ogg">
+		<video id="Matrix" mediagroup="myTest">
+
+			<source src="https://dl.dropbox.com/u/5295617/HTML5%20video/The_Matrix.webm" type="video/webm">
+			<source src="https://dl.dropbox.com/u/5295617/HTML5%20video/The_Matrix.ogv" type="video/ogg">
+
 			Your browser does not support the video tag.
 		</video>
 
         <div class="video-player-controls" align="center">
-		<p id="loadStatus">MOVIE LOADING...</p>
-		<input type="button" onclick="myPlayPause()" accesskey="1" value="Play/Pause">
-
+			<p id="loadStatus">MOVIE LOADING...</p>
+			<!-- Note: this button is accessible using "Alt-1" -->
+			<input type="button" onclick="myPlayPause()" accesskey="1" value="Play/Pause">
 		</div>
 		
 <!--
@@ -109,9 +95,6 @@
 			<source src=“https://dl.dropbox.com/u/5295617/411.mp3” type=”audio/mp3”>
 		</audio>
  -->
- <!--
- 		<video id="cTl3U6aSd2w" src="http://r14---sn-nwj7knle.c.youtube.com/videoplayback?upn=GXXUvrZ2etg&amp;ip=204.28.120.190&amp;cp=U0hUTVlMVV9NT0NONF9RRllIOm5IVFRMblhkNGR4&amp;ms=au&amp;fexp=900161%2C901463%2C920704%2C912806%2C922403%2C922405%2C929901%2C913605%2C925710%2C929104%2C929110%2C908493%2C920201%2C913302%2C919009%2C911116%2C910221%2C901451&amp;ipbits=8&amp;itag=43&amp;id=71397753a692776c&amp;sparams=cp%2Cid%2Cip%2Cipbits%2Citag%2Cratebypass%2Csource%2Cupn%2Cexpire&amp;key=yt1&amp;mv=m&amp;mt=1358894475&amp;expire=1358917785&amp;ratebypass=yes&amp;sver=3&amp;source=youtube&amp;signature=38A73D7B886AF3AF8CFCCB8AC71F05EB1164C3E8.7CB58132C896768104EE75B974DF3813F45F3ABF"></video>
--->
  	</body>
 	
 </html>
