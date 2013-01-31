@@ -2,49 +2,31 @@
 <html>
 
 <head>
-	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 	<title>HTML5 video description test</title>
+
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 	<meta name="title" content="HTML5 video description test">
 	<meta name="description" content="Test use of the HTML5 video tag for DVX description of video">
 	<meta name="keywords" content="HTML5, video description, extended description, media, accessibility">
-	<style>
-	</style>
-	<!-- <script src="http://code.jquery.com/jquery-git.js"></script>
-	<script src="https://getfirebug.com/firebug-lite-debug.js"></script> -->
-	<script src="mediagroup.js/src/mediagroup.js"></script>
+
 	<script type="text/javascript">
 		// This structure should clearly be an XML file!!
 		// Structure is:
 		//     [0] StartVideoTimecode (seconds)
-		//     [1] Duration (seconds)
+		//     [1] Duration (seconds) (Note that this is the maximum duration of the audio clip; it will play to completion, or until this time period expires)
 		//     [2] inline|extended
 		//     [3] URL of description clip
 		//     [4] options (e.g. "duck")
 		//
-		var descriptionList = [ [1.0, 7.0, "inline", "EDclip001.wav", ""], [11.0, 5.0, "inline", "EDclip002.wav", ""], [16.0, 5.0, "inline", "EDclip003.wav", ""], [28.0, 10.0, "extended", "EDclip004x.wav", ""], [50.0, 10.0, "inline", "EDclip004x.wav", "duck"] ];
+		var descriptionList = [ [1.0, 7.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip001.wav", ""], [11.0, 5.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip002.wav", ""], [16.0, 5.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip003.wav", ""], [28.0, 8.0, "extended", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipExtended1.wav", ""], [40.0, 6.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav", "duck"] ];
 
 		var audioDuckFactor = 0.25;	// Factor by which to duck the audio
-		
+
 		var currentPlayedDescription = 0;
 		var inInlineDescription = false;
 		var inExtendedDescription = false;
-		var lastDescriptionVideoTime = -1;
-		var lastDescriptionAudioTime = -1;
-		var lastDescriptionCurrent = 0;
+		var lastDescriptionCurrent = -1;
 		
-		function myPlayPause() {
-			var myVideo = document.getElementsByTagName('video')[0];
-			var myAudio = document.getElementsByTagName('audio')[0];
-
-			if (myVideo.paused) {
-				myVideo.play();
-				if ( inInlineDescription ) myAudio.play();
-				else myAudio.pause();
-			} else {
-				myVideo.pause();
-				if ( inInlineDescription ) myAudio.pause();
-			}
-		}
 		var prevCurrentTime = 0;
 		function showTimecode() {
 			var myVideo = document.getElementsByTagName('video')[0];
@@ -52,16 +34,21 @@
 			document.getElementById("loadStatus").innerHTML =  parseInt(myCurrentTime * 100)/100 + ' secs, delta = ' + parseInt((myCurrentTime - prevCurrentTime) * 100)/100 + ' secs';
 			prevCurrentTime = myCurrentTime;
 		}
-		function myFixAutoPlay(){
+
+		function myVideoCanplay(){
 			var myVideo = document.getElementsByTagName('video')[0];
+			
+			// Do nothing right now; we could pause the video and wait until the audio is ready, if necessary.
+			
 			//myVideo.pause();
 		}
+
 		function myAddListeners(){
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
 
 			myVideo.addEventListener('timeupdate', checkStartDescription, false);
-			myVideo.addEventListener('canplay', myFixAutoPlay, false);
+			myVideo.addEventListener('canplay', myVideoCanplay, false);
 
 			myAudio.addEventListener('timeupdate', descriptionAudioTimeUpdate, false);
 			myAudio.addEventListener('ended', DescriptionClipEnded, false);
@@ -79,14 +66,38 @@
 		
 			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentPlayedDescription][3];
 		}
+
+		function myPlayPause() {
+			var myVideo = document.getElementsByTagName('video')[0];
+			var myAudio = document.getElementsByTagName('audio')[0];
+
+			if ( inExtendedDescription ) {
+				if (myAudio.paused) {
+					myAudio.play();
+				} else {
+					myAudio.pause();
+				}
+			} else {
+				if (myVideo.paused) {
+					myVideo.play();
+					playDescription();
+				} else {
+					myVideo.pause();
+					pauseDescription();
+				}
+			}
+		}
+
 		function pauseDescription(){
 			var myAudio = document.getElementsByTagName('audio')[0];
 			if ( inInlineDescription && !myAudio.paused ) myAudio.pause();
 		}
+
 		function playDescription(){
 			var myAudio = document.getElementsByTagName('audio')[0];
 			if ( inInlineDescription && myAudio.paused ) myAudio.play();
 		}
+
 		function checkStartDescription(){
 			showTimecode();
 
@@ -96,12 +107,12 @@
 			if ( !inInlineDescription ) {
 				if ( ( myVideo.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( myVideo.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "inline" == descriptionList[currentPlayedDescription][2] ) ) {
 					myAudio.currentTime = 0;
-					lastDescriptionVideoTime = myVideo.currentTime;
-					lastDescriptionAudioTime = myAudio.currentTime;
 					lastDescriptionCurrent = currentPlayedDescription;
 
-					if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
-						myVideo.volume = myVideo.volume * audioDuckFactor;	// Duck the main volume
+					if ( document.getElementById("allowAutoDuck").checked ) {
+						if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+							myVideo.volume = myVideo.volume * audioDuckFactor;	// Duck the main volume
+						}
 					}
 					if ( myAudio.paused ) myAudio.play();
 					inInlineDescription = true;
@@ -113,8 +124,6 @@
 				
 				if ( ( myVideo.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( myVideo.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "extended" == descriptionList[currentPlayedDescription][2] ) ) {
 					myAudio.currentTime = 0;
-					lastDescriptionVideoTime = myVideo.currentTime;
-					lastDescriptionAudioTime = myAudio.currentTime;
 					lastDescriptionCurrent = currentPlayedDescription;
 
 					if ( !myVideo.paused ) myVideo.pause();
@@ -125,17 +134,19 @@
 
 					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
 				}
-
 			}
 		}
+
 		function DescriptionClipEnded() {
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
 
 			if ( inInlineDescription ) {
 				inInlineDescription = false;
-				if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
-					myVideo.volume = myVideo.volume / audioDuckFactor;	// Restore volume to previous value
+				if ( document.getElementById("allowAutoDuck").checked ) {
+					if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+						myVideo.volume = myVideo.volume / audioDuckFactor;	// Restore volume to previous value
+					}
 				}
 			}
 			if ( inExtendedDescription ) {
@@ -155,32 +166,60 @@
 		
 			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentPlayedDescription][3];
 		}
+
+		function autoDuckChanged() {
+			if ( inInlineDescription ) {
+				if ( document.getElementById("allowAutoDuck").checked ) {
+					if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+						// allowAutoDuck was checked during an inline description that allows ducking
+						myVideo.volume = myVideo.volume * audioDuckFactor;	// Duck the main volume
+					}
+				} else {
+					if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+						// allowAutoDuck was unchecked during an inline description that was already ducked
+						myVideo.volume = myVideo.volume / audioDuckFactor;	// Restore volume to previous value
+					}
+				}
+			}
+		}
+
 		function descriptionAudioTimeUpdate(){
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
 
 		}
+
 		function repeatLastDescription() {
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
 
-			if ( ( lastDescriptionVideoTime >= 0 ) && ( lastDescriptionAudioTime >= 0 ) ) {
-				myVideo.currentTime = lastDescriptionVideoTime;
-				myAudio.currentTime = lastDescriptionAudioTime;
-				if ( !inInlineDescription ) {
-					if ( myAudio.paused ) myAudio.play();
-					inInlineDescription = true;
-					currentPlayedDescription = lastDescriptionCurrent;
-					document.getElementById("DescriptionDebug").innerHTML = descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
+			if ( lastDescriptionCurrent >= 0 ) {
+				// If we're in the middle of a description clip, pause it and treat it like the end of a clip
+				if ( inInlineDescription || inExtendedDescription ) {
+					if ( !myAudio.paused ) myAudio.pause();
+					DescriptionClipEnded();
 				}
+
+				currentPlayedDescription = lastDescriptionCurrent;
+
+				myVideo.currentTime = descriptionList[currentPlayedDescription][0];
+
+				myAudio.src = descriptionList[currentPlayedDescription][3];
+				myAudio.load();
+				myAudio.pause();
+			
+				document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentPlayedDescription][3];
+
+				checkStartDescription();
 			}
 		}
-</script>
+
+	</script>
 </head>
 
 <body onload="myAddListeners()">
 
-	<video class="controller" controls autoplay>
+	<video class="video-content" controls autoplay>
 		<source src="http://archive.org/download/ElephantsDream/ed_1024_512kb.mp4"></source>
 		<source src="http://archive.org/download/ElephantsDream/ed_1024.ogv"></source>
 		<source src="http://archive.org/download/ElephantsDream/ed_1024.avi"></source>
@@ -197,6 +236,7 @@
 		<!-- Note: this button is accessible using "Alt-p" -->
 		<input type="button" onclick="myPlayPause()" accesskey="p" value="Play/Pause">
 		<input type="button" onclick="repeatLastDescription()" accesskey="r" value="Skip to Recent Description" disabled id="repeatLast">
+		<p id="duckingControl"><input type="checkbox" onclick="autoDuckChanged()" accesskey="d" checked id="allowAutoDuck"> Allow automatic ducking</p>
 	</div>
 
 </body>
