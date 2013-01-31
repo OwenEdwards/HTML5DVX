@@ -22,10 +22,10 @@
 
 		var audioDuckFactor = 0.25;	// Factor by which to duck the audio
 
-		var currentPlayedDescription = 0;
+		var currentDescription = 0;
 		var inInlineDescription = false;
 		var inExtendedDescription = false;
-		var lastDescriptionCurrent = -1;
+		var recentDescription = -1;
 		
 		var prevCurrentTime = 0;
 		function showTimecode() {
@@ -56,15 +56,15 @@
 			myVideo.addEventListener('pause', pauseDescription, false);
 			myVideo.addEventListener('play', playDescription, false);
 			
-			currentPlayedDescription = 0;
+			currentDescription = 0;
 			inInlineDescription = false;
 			inExtendedDescription = false;
 			
-			myAudio.src = descriptionList[currentPlayedDescription][3];
+			myAudio.src = descriptionList[currentDescription][3];
 			myAudio.load();
 			myAudio.pause();
 		
-			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentPlayedDescription][3];
+			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription][3];
 		}
 
 		function myPlayPause() {
@@ -72,12 +72,14 @@
 			var myAudio = document.getElementsByTagName('audio')[0];
 
 			if ( inExtendedDescription ) {
+				// If we're in Extended Description, just pause or play the description
 				if (myAudio.paused) {
 					myAudio.play();
 				} else {
 					myAudio.pause();
 				}
 			} else {
+				// Otherwise, play/pause the video and check if the description needs play/pause-ing
 				if (myVideo.paused) {
 					myVideo.play();
 					playDescription();
@@ -105,12 +107,12 @@
 			var myAudio = document.getElementsByTagName('audio')[0];
 
 			if ( !inInlineDescription ) {
-				if ( ( myVideo.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( myVideo.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "inline" == descriptionList[currentPlayedDescription][2] ) ) {
+				if ( ( myVideo.currentTime >= descriptionList[currentDescription][0] ) && ( myVideo.currentTime < ( descriptionList[currentDescription][0] + descriptionList[currentDescription][1] ) ) && ( "inline" == descriptionList[currentDescription][2] ) ) {
 					myAudio.currentTime = 0;
-					lastDescriptionCurrent = currentPlayedDescription;
+					recentDescription = currentDescription;
 
 					if ( document.getElementById("allowAutoDuck").checked ) {
-						if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+						if ( "duck" == descriptionList[currentDescription][4] ) {
 							myVideo.volume = myVideo.volume * audioDuckFactor;	// Duck the main volume
 						}
 					}
@@ -119,12 +121,12 @@
 
 					document.getElementById("repeatLast").disabled = false;
 
-					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription + " (" + descriptionList[currentPlayedDescription][4] + ")";
+					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentDescription][2] + " description " + currentDescription + " (" + descriptionList[currentDescription][4] + ")";
 				}
 				
-				if ( ( myVideo.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( myVideo.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "extended" == descriptionList[currentPlayedDescription][2] ) ) {
+				if ( ( myVideo.currentTime >= descriptionList[currentDescription][0] ) && ( myVideo.currentTime < ( descriptionList[currentDescription][0] + descriptionList[currentDescription][1] ) ) && ( "extended" == descriptionList[currentDescription][2] ) ) {
 					myAudio.currentTime = 0;
-					lastDescriptionCurrent = currentPlayedDescription;
+					recentDescription = currentDescription;
 
 					if ( !myVideo.paused ) myVideo.pause();
 					if ( myAudio.paused ) myAudio.play();
@@ -132,7 +134,7 @@
 
 					document.getElementById("repeatLast").disabled = false;
 
-					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
+					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentDescription][2] + " description " + currentDescription;
 				}
 			}
 		}
@@ -144,7 +146,7 @@
 			if ( inInlineDescription ) {
 				inInlineDescription = false;
 				if ( document.getElementById("allowAutoDuck").checked ) {
-					if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+					if ( "duck" == descriptionList[currentDescription][4] ) {
 						myVideo.volume = myVideo.volume / audioDuckFactor;	// Restore volume to previous value
 					}
 				}
@@ -154,28 +156,31 @@
 				inExtendedDescription = false;
 			}
 			
-			currentPlayedDescription = currentPlayedDescription + 1;
-			if ( currentPlayedDescription >= descriptionList.length ) {
-				currentPlayedDescription = currentPlayedDescription - 1;
+			currentDescription = currentDescription + 1;
+			if ( currentDescription >= descriptionList.length ) {
+				currentDescription = currentDescription - 1;
 			}
-			document.getElementById("DescriptionDebug").innerHTML = "Waiting for " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
+			document.getElementById("DescriptionDebug").innerHTML = "Waiting for " + descriptionList[currentDescription][2] + " description " + currentDescription;
 
-			myAudio.src = descriptionList[currentPlayedDescription][3];
+			myAudio.src = descriptionList[currentDescription][3];
 			myAudio.load();
 			myAudio.pause();
 		
-			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentPlayedDescription][3];
+			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription][3];
 		}
 
 		function autoDuckChanged() {
+			var myVideo = document.getElementsByTagName('video')[0];
+			var myAudio = document.getElementsByTagName('audio')[0];
+
 			if ( inInlineDescription ) {
 				if ( document.getElementById("allowAutoDuck").checked ) {
-					if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+					if ( "duck" == descriptionList[currentDescription][4] ) {
 						// allowAutoDuck was checked during an inline description that allows ducking
 						myVideo.volume = myVideo.volume * audioDuckFactor;	// Duck the main volume
 					}
 				} else {
-					if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+					if ( "duck" == descriptionList[currentDescription][4] ) {
 						// allowAutoDuck was unchecked during an inline description that was already ducked
 						myVideo.volume = myVideo.volume / audioDuckFactor;	// Restore volume to previous value
 					}
@@ -193,22 +198,22 @@
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
 
-			if ( lastDescriptionCurrent >= 0 ) {
+			if ( recentDescription >= 0 ) {
 				// If we're in the middle of a description clip, pause it and treat it like the end of a clip
 				if ( inInlineDescription || inExtendedDescription ) {
 					if ( !myAudio.paused ) myAudio.pause();
 					DescriptionClipEnded();
 				}
 
-				currentPlayedDescription = lastDescriptionCurrent;
+				currentDescription = recentDescription;
 
-				myVideo.currentTime = descriptionList[currentPlayedDescription][0];
+				myVideo.currentTime = descriptionList[currentDescription][0];
 
-				myAudio.src = descriptionList[currentPlayedDescription][3];
+				myAudio.src = descriptionList[currentDescription][3];
 				myAudio.load();
 				myAudio.pause();
 			
-				document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentPlayedDescription][3];
+				document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription][3];
 
 				checkStartDescription();
 			}
