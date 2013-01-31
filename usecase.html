@@ -18,7 +18,7 @@
 		//     StartVideoTimecode (seconds)
 		//     Duration (seconds)
 		//     inline|extended
-		var descriptionList = [ [2.0, 5.0, "inline"], [10.0, 5.0, "inline"], [25.0, 5.0, "extended"] ];
+		var descriptionList = [ [1.0, 7.0, "inline", "EDclip001.ogg"], [11.0, 5.0, "inline", "EDclip002.ogg"], [16.0, 5.0, "inline", "EDclip003.ogg"], [28.0, 10.0, "extended", "EDclip004.ogg"] ];
 		var audioOffsetList = [0];
 		var currentPlayedDescription = 0;
 		var inInlineDescription = false;
@@ -68,6 +68,7 @@
 
 			var myAudio = document.getElementsByTagName('audio')[0];
 			myAudio.addEventListener('timeupdate', controlExtendedDescription, false);
+			myAudio.addEventListener('ended', DescriptionClipEnded, false);
 			
 			mediaController.addEventListener('pause', pauseInlineDescription, false);
 			mediaController.addEventListener('play', playInlineDescription, false);
@@ -99,7 +100,7 @@
 
 			if ( !inInlineDescription ) {
 				if ( ( mediaController.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( mediaController.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "inline" == descriptionList[currentPlayedDescription][2] ) ) {
-					myAudio.currentTime = audioOffsetList[currentPlayedDescription];
+					myAudio.currentTime = 0;
 					lastDescriptionVideoTime = mediaController.currentTime;
 					lastDescriptionAudioTime = myAudio.currentTime;
 					lastDescriptionCurrent = currentPlayedDescription;
@@ -113,7 +114,7 @@
 				}
 				
 				if ( ( mediaController.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( mediaController.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "extended" == descriptionList[currentPlayedDescription][2] ) ) {
-					myAudio.currentTime = audioOffsetList[currentPlayedDescription];
+					myAudio.currentTime = 0;
 					lastDescriptionVideoTime = mediaController.currentTime;
 					lastDescriptionAudioTime = myAudio.currentTime;
 					lastDescriptionCurrent = currentPlayedDescription;
@@ -127,37 +128,37 @@
 					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
 				}
 
-			} else {
-				if ( ( mediaController.currentTime >= ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) ) {
-					if ( !myAudio.paused ) myAudio.pause();
-					inInlineDescription = false;
-					currentPlayedDescription = currentPlayedDescription + 1;
-					
-					if ( currentPlayedDescription >= descriptionList.length ) {
-						currentPlayedDescription = currentPlayedDescription - 1;
-					}
-					document.getElementById("DescriptionDebug").innerHTML = "Waiting for " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
-				}
 			}
+		}
+		function DescriptionClipEnded() {
+			var mediaController = document.querySelectorAll('video')[0].controller;
+			var myVideo = document.getElementsByTagName('video')[0];
+			var myAudio = document.getElementsByTagName('audio')[0];
+
+			if ( inInlineDescription ) {
+				inInlineDescription = false;
+				currentPlayedDescription = currentPlayedDescription + 1;
+			}
+			if ( inExtendedDescription ) {
+				if ( myVideo.paused ) myVideo.play();
+				inExtendedDescription = false;
+			}
+			
+			if ( currentPlayedDescription >= descriptionList.length ) {
+				currentPlayedDescription = currentPlayedDescription - 1;
+			}
+			document.getElementById("DescriptionDebug").innerHTML = "Waiting for " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
+
+			myAudio.src = descriptionList[currentPlayedDescription][3];
+			myAudio.load();
+			myAudio.pause();
+		
+			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentPlayedDescription][3];
 		}
 		function controlExtendedDescription(){
 			var mediaController = document.querySelectorAll('video')[0].controller;
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
-
-			if ( inExtendedDescription ) {
-				if ( ( myAudio.currentTime >= ( audioOffsetList[currentPlayedDescription] + descriptionList[currentPlayedDescription][1] ) ) ) {
-					if ( myVideo.paused ) myVideo.play();
-					if ( !myAudio.paused ) myAudio.pause();
-					inExtendedDescription = false;
-					currentPlayedDescription = currentPlayedDescription + 1;
-					
-					if ( currentPlayedDescription >= descriptionList.length ) {
-						currentPlayedDescription = currentPlayedDescription - 1;
-					}
-					document.getElementById("DescriptionDebug").innerHTML = "Waiting for " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
-				}
-			}
 
 		}
 		function repeatLastDescription() {
@@ -201,13 +202,13 @@
      It is more suitable for an extended description track.
 -->
 	<audio>
-		<source src="411.mp3"></source>
-		<source src="411.ogg"></source>
+		<source src="EDclip001.ogg"></source>
 	</audio>
 
 	<div class="video-player-controls">
 		<p id="loadStatus">MOVIE LOADING...</p>
 		<p id="DescriptionDebug">DescriptionDebug</p>
+		<p id="DescriptionAudioDebug">DescriptionAudioDebug</p>
 		<!-- Note: this button is accessible using "Alt-p" -->
 		<input type="button" onclick="myPlayPause()" accesskey="p" value="Play/Pause">
 		<input type="button" onclick="repeatLastDescription()" accesskey="r" value="Skip to Recent Description" disabled id="repeatLast">
