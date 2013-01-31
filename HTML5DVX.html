@@ -25,6 +25,7 @@
 								[40.0, 6.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav", "duck"] ];
 
 		var audioDuckFactor = 0.25;	// Factor by which to duck the audio
+		var checkStartDescriptionRate = 10; // Number of times per second to check for the start of a description (more is better, but loads the browser more)
 
 		var currentDescription = 0;	// Index into descriptionList
 		var inInlineDescription = false;
@@ -36,7 +37,7 @@
 		function showTimecode() {
 			var describedVideo = document.getElementsByTagName('video')[0];
 			var videoCurrentTime = describedVideo.currentTime;
-			document.getElementById("loadStatus").innerHTML =  parseInt(videoCurrentTime * 100)/100 + ' secs, delta = ' + parseInt((videoCurrentTime - prevCurrentTime) * 100)/100 + ' secs';
+			document.getElementById("loadStatus").innerHTML =  parseInt(videoCurrentTime * 10)/10 + ' secs, delta = ' + parseInt((videoCurrentTime - prevCurrentTime) * 1000) + ' millisecs';
 			prevCurrentTime = videoCurrentTime;
 		}
 
@@ -53,8 +54,13 @@
 			
 			var describedVideo = document.getElementsByTagName('video')[0];
 
-			describedVideo.addEventListener('timeupdate', checkStartDescription, false);
 			describedVideo.addEventListener('canplay', describedVideoCanplay, false);
+			// Instead of checking for a description start based on timeupdate events, which might be as slow as 1/4th second,
+			//  user our own timer so we can control the rate ourselves.
+			//describedVideo.addEventListener('timeupdate', checkStartDescription, false);
+			setInterval(function() {
+				checkStartDescription();
+			}, 1000/checkStartDescriptionRate);
 
 			descriptionAudio.addEventListener('timeupdate', descriptionAudioTimeUpdate, false);
 			descriptionAudio.addEventListener('ended', DescriptionClipEnded, false);
@@ -66,7 +72,7 @@
 			inInlineDescription = false;
 			inExtendedDescription = false;
 
-			descriptionAudio.setAttribute('src', descriptionList[currentDescription][3] );
+			descriptionAudio.src = descriptionList[currentDescription][3];
 			descriptionAudio.load();
 			descriptionAudio.pause();
 		
@@ -108,7 +114,7 @@
 
 			var describedVideo = document.getElementsByTagName('video')[0];
 
-			if ( !inInlineDescription ) {
+			if ( !inInlineDescription && !inExtendedDescription ) {
 				if ( ( describedVideo.currentTime >= descriptionList[currentDescription][0] ) && ( describedVideo.currentTime < ( descriptionList[currentDescription][0] + descriptionList[currentDescription][1] ) ) && ( "inline" == descriptionList[currentDescription][2] ) ) {
 					descriptionAudio.currentTime = 0;
 					recentDescription = currentDescription;
