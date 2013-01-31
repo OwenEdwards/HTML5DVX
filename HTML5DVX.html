@@ -10,7 +10,7 @@
 	<meta name="keywords" content="HTML5, video description, extended description, media, accessibility">
 
 	<script type="text/javascript">
-		// This structure should clearly be an XML file!!
+		// This structure should clearly be an XML file!! (See http://www.w3schools.com/dom/dom_loadxmldoc.asp for potential implementation)
 		// Structure is:
 		//     [0] StartVideoTimecode (seconds)
 		//     [1] Duration (seconds) (Note that this is the maximum duration of the audio clip; it will play to completion, or until this time period expires)
@@ -18,7 +18,11 @@
 		//     [3] URL of description clip
 		//     [4] options (e.g. "duck")
 		//
-		var descriptionList = [ [1.0, 7.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip001.wav", ""], [11.0, 5.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip002.wav", ""], [16.0, 5.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip003.wav", ""], [28.0, 8.0, "extended", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipExtended1.wav", ""], [40.0, 6.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav", "duck"] ];
+		var descriptionList = [ [1.0, 7.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip001.wav", ""],
+		                        [11.0, 5.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip002.wav", ""],
+								[16.0, 5.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip003.wav", ""],
+								[28.0, 8.0, "extended", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipExtended1.wav", ""], 
+								[40.0, 6.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav", "duck"] ];
 
 		var audioDuckFactor = 0.25;	// Factor by which to duck the audio
 
@@ -26,6 +30,7 @@
 		var inInlineDescription = false;
 		var inExtendedDescription = false;
 		var recentDescription = -1;
+		var descriptionAudio;
 		
 		var prevCurrentTime = 0;
 		function showTimecode() {
@@ -44,14 +49,15 @@
 		}
 
 		function myAddListeners(){
+			descriptionAudio = document.createElement('audio');
+
 			var myVideo = document.getElementsByTagName('video')[0];
-			var myAudio = document.getElementsByTagName('audio')[0];
 
 			myVideo.addEventListener('timeupdate', checkStartDescription, false);
 			myVideo.addEventListener('canplay', myVideoCanplay, false);
 
-			myAudio.addEventListener('timeupdate', descriptionAudioTimeUpdate, false);
-			myAudio.addEventListener('ended', DescriptionClipEnded, false);
+			descriptionAudio.addEventListener('timeupdate', descriptionAudioTimeUpdate, false);
+			descriptionAudio.addEventListener('ended', DescriptionClipEnded, false);
 			
 			myVideo.addEventListener('pause', pauseDescription, false);
 			myVideo.addEventListener('play', playDescription, false);
@@ -59,17 +65,17 @@
 			currentDescription = 0;
 			inInlineDescription = false;
 			inExtendedDescription = false;
-			
-			myAudio.src = descriptionList[currentDescription][3];
-			myAudio.load();
-			myAudio.pause();
+
+			descriptionAudio.setAttribute('src', descriptionList[currentDescription][3] );
+			descriptionAudio.load();
+			descriptionAudio.pause();
 		
 			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription][3];
 		}
 
 		function myPlayPause() {
 			var myVideo = document.getElementsByTagName('video')[0];
-			var myAudio = document.getElementsByTagName('audio')[0];
+			var myAudio = descriptionAudio;
 
 			if ( inExtendedDescription ) {
 				// If we're in Extended Description, just pause or play the description
@@ -91,12 +97,12 @@
 		}
 
 		function pauseDescription(){
-			var myAudio = document.getElementsByTagName('audio')[0];
+			var myAudio = descriptionAudio;
 			if ( inInlineDescription && !myAudio.paused ) myAudio.pause();
 		}
 
 		function playDescription(){
-			var myAudio = document.getElementsByTagName('audio')[0];
+			var myAudio = descriptionAudio;
 			if ( inInlineDescription && myAudio.paused ) myAudio.play();
 		}
 
@@ -104,7 +110,7 @@
 			showTimecode();
 
 			var myVideo = document.getElementsByTagName('video')[0];
-			var myAudio = document.getElementsByTagName('audio')[0];
+			var myAudio = descriptionAudio;
 
 			if ( !inInlineDescription ) {
 				if ( ( myVideo.currentTime >= descriptionList[currentDescription][0] ) && ( myVideo.currentTime < ( descriptionList[currentDescription][0] + descriptionList[currentDescription][1] ) ) && ( "inline" == descriptionList[currentDescription][2] ) ) {
@@ -141,7 +147,7 @@
 
 		function DescriptionClipEnded() {
 			var myVideo = document.getElementsByTagName('video')[0];
-			var myAudio = document.getElementsByTagName('audio')[0];
+			var myAudio = descriptionAudio;
 
 			if ( inInlineDescription ) {
 				inInlineDescription = false;
@@ -171,7 +177,7 @@
 
 		function autoDuckChanged() {
 			var myVideo = document.getElementsByTagName('video')[0];
-			var myAudio = document.getElementsByTagName('audio')[0];
+			var myAudio = descriptionAudio;
 
 			if ( inInlineDescription ) {
 				if ( document.getElementById("allowAutoDuck").checked ) {
@@ -190,13 +196,13 @@
 
 		function descriptionAudioTimeUpdate(){
 			var myVideo = document.getElementsByTagName('video')[0];
-			var myAudio = document.getElementsByTagName('audio')[0];
+			var myAudio = descriptionAudio;
 
 		}
 
 		function repeatLastDescription() {
 			var myVideo = document.getElementsByTagName('video')[0];
-			var myAudio = document.getElementsByTagName('audio')[0];
+			var myAudio = descriptionAudio;
 
 			if ( recentDescription >= 0 ) {
 				// If we're in the middle of a description clip, pause it and treat it like the end of a clip
@@ -229,10 +235,6 @@
 		<source src="http://archive.org/download/ElephantsDream/ed_1024.ogv"></source>
 		<source src="http://archive.org/download/ElephantsDream/ed_1024.avi"></source>
 	</video>
-
-	<audio>
-		<source src="EDclip001.wav"></source>
-	</audio>
 
 	<div class="video-player-controls">
 		<!-- Note: these buttons are accessible using "Alt-X" shortcuts -->
