@@ -19,9 +19,12 @@
 		//     [1] Duration (seconds)
 		//     [2] inline|extended
 		//     [3] URL of description clip
+		//     [4] options (e.g. "duck")
 		//
-		var descriptionList = [ [1.0, 7.0, "inline", "EDclip001.ogg"], [11.0, 5.0, "inline", "EDclip002.ogg"], [16.0, 5.0, "inline", "EDclip003.ogg"], [28.0, 10.0, "extended", "EDclip004x.ogg"], [50.0, 10.0, "inline", "EDclip004x.ogg"] ];
+		var descriptionList = [ [1.0, 7.0, "inline", "EDclip001.wav", ""], [11.0, 5.0, "inline", "EDclip002.wav", ""], [16.0, 5.0, "inline", "EDclip003.wav", ""], [28.0, 10.0, "extended", "EDclip004x.wav", ""], [50.0, 10.0, "inline", "EDclip004x.wav", "duck"] ];
 
+		var audioDuckFactor = 0.25;	// Factor by which to duck the audio
+		
 		var currentPlayedDescription = 0;
 		var inInlineDescription = false;
 		var inExtendedDescription = false;
@@ -97,12 +100,15 @@
 					lastDescriptionAudioTime = myAudio.currentTime;
 					lastDescriptionCurrent = currentPlayedDescription;
 
+					if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+						myVideo.volume = myVideo.volume * audioDuckFactor;	// Duck the main volume
+					}
 					if ( myAudio.paused ) myAudio.play();
 					inInlineDescription = true;
 
 					document.getElementById("repeatLast").disabled = false;
 
-					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
+					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription + " (" + descriptionList[currentPlayedDescription][4] + ")";
 				}
 				
 				if ( ( myVideo.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( myVideo.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "extended" == descriptionList[currentPlayedDescription][2] ) ) {
@@ -128,6 +134,9 @@
 
 			if ( inInlineDescription ) {
 				inInlineDescription = false;
+				if ( "duck" == descriptionList[currentPlayedDescription][4] ) {
+					myVideo.volume = myVideo.volume / audioDuckFactor;	// Restore volume to previous value
+				}
 			}
 			if ( inExtendedDescription ) {
 				if ( myVideo.paused ) myVideo.play();
@@ -178,7 +187,7 @@
 	</video>
 
 	<audio>
-		<source src="EDclip001.ogg"></source>
+		<source src="EDclip001.wav"></source>
 	</audio>
 
 	<div class="video-player-controls">
