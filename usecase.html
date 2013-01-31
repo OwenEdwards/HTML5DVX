@@ -69,6 +69,12 @@
 			currentPlayedDescription = 0;
 			inInlineDescription = false;
 			inExtendedDescription = false;
+			
+			myAudio.src = descriptionList[currentPlayedDescription][3];
+			myAudio.load();
+			myAudio.pause();
+		
+			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentPlayedDescription][3];
 		}
 		function pauseDescription(){
 			var myAudio = document.getElementsByTagName('audio')[0];
