@@ -14,7 +14,12 @@
 	<script src="mediagroup.js/src/mediagroup.js"></script>
 	<script type="text/javascript">
 		// This structure should clearly be an XML file!!
+		// Structure is:
+		//     StartVideoTimecode (seconds)
+		//     Duration (seconds)
+		//     inline|extended
 		var descriptionList = [ [2.0, 5.0, "inline"], [10.0, 5.0, "inline"], [25.0, 5.0, "extended"] ];
+		var audioOffsetList = [0];
 		var currentPlayedDescription = 0;
 		var inInlineDescription = false;
 		var inExtendedDescription = false;
@@ -49,6 +54,7 @@
 			// In order for the separate audio/video tracks to work correctly with the mediaController,
 			//  we have to set them with 'autoplay' otherwise they won't play. But, if we don't want the
 			//  mediaController to autoplay, we need to pause it here.
+
 			var mediaController = document.querySelectorAll('video')[0].controller;
 			//mediaController.pause();
 		}
@@ -69,6 +75,12 @@
 			currentPlayedDescription = 0;
 			inInlineDescription = false;
 			inExtendedDescription = false;
+
+			var audioOffset = 0;
+			for(i=0; i<descriptionList.length; i++ ) {
+				audioOffsetList[i] = audioOffset;
+				audioOffset = audioOffset + descriptionList[i][1];
+			}
 		}
 		function pauseInlineDescription(){
 			var myAudio = document.getElementsByTagName('audio')[0];
@@ -85,7 +97,37 @@
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
 
-			if ( inInlineDescription ) {
+			if ( !inInlineDescription ) {
+				if ( ( mediaController.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( mediaController.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "inline" == descriptionList[currentPlayedDescription][2] ) ) {
+					myAudio.currentTime = audioOffsetList[currentPlayedDescription];
+					lastDescriptionVideoTime = mediaController.currentTime;
+					lastDescriptionAudioTime = myAudio.currentTime;
+					lastDescriptionCurrent = currentPlayedDescription;
+
+					if ( myAudio.paused ) myAudio.play();
+					inInlineDescription = true;
+
+					document.getElementById("repeatLast").disabled = false;
+
+					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
+				}
+				
+				if ( ( mediaController.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( mediaController.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "extended" == descriptionList[currentPlayedDescription][2] ) ) {
+					myAudio.currentTime = audioOffsetList[currentPlayedDescription];
+					lastDescriptionVideoTime = mediaController.currentTime;
+					lastDescriptionAudioTime = myAudio.currentTime;
+					lastDescriptionCurrent = currentPlayedDescription;
+
+					if ( !myVideo.paused ) myVideo.pause();
+					if ( myAudio.paused ) myAudio.play();
+					inExtendedDescription = true;
+
+					document.getElementById("repeatLast").disabled = false;
+
+					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
+				}
+
+			} else {
 				if ( ( mediaController.currentTime >= ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) ) {
 					if ( !myAudio.paused ) myAudio.pause();
 					inInlineDescription = false;
@@ -94,19 +136,7 @@
 					if ( currentPlayedDescription >= descriptionList.length ) {
 						currentPlayedDescription = currentPlayedDescription - 1;
 					}
-					document.getElementById("DescriptionDebug").innerHTML = "Waiting for description " + currentPlayedDescription;
-				}
-			} else {
-				if ( ( mediaController.currentTime >= descriptionList[currentPlayedDescription][0] ) && ( mediaController.currentTime < ( descriptionList[currentPlayedDescription][0] + descriptionList[currentPlayedDescription][1] ) ) && ( "inline" == descriptionList[currentPlayedDescription][2] ) ) {
-					if ( myAudio.paused ) myAudio.play();
-					inInlineDescription = true;
-					lastDescriptionVideoTime = mediaController.currentTime;
-					lastDescriptionAudioTime = myAudio.currentTime;
-					lastDescriptionCurrent = currentPlayedDescription;
-
-					document.getElementById("repeatLast").disabled = false;
-
-					document.getElementById("DescriptionDebug").innerHTML = "Inline description " + currentPlayedDescription;
+					document.getElementById("DescriptionDebug").innerHTML = "Waiting for " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
 				}
 			}
 		}
@@ -115,9 +145,19 @@
 			var myVideo = document.getElementsByTagName('video')[0];
 			var myAudio = document.getElementsByTagName('audio')[0];
 
-			if ( myAudio.currentTime >= 21.0 ) {}
-			else if ( ( myAudio.currentTime < 21.0 ) && ( myAudio.currentTime >= 20.0 ) &&  myVideo.paused ) myVideo.play();
-			else if ( ( myAudio.currentTime < 20.0 ) && ( myAudio.currentTime >= 15.0 ) && !myVideo.paused ) myVideo.pause();
+			if ( inExtendedDescription ) {
+				if ( ( myAudio.currentTime >= ( audioOffsetList[currentPlayedDescription] + descriptionList[currentPlayedDescription][1] ) ) ) {
+					if ( myVideo.paused ) myVideo.play();
+					if ( !myAudio.paused ) myAudio.pause();
+					inExtendedDescription = false;
+					currentPlayedDescription = currentPlayedDescription + 1;
+					
+					if ( currentPlayedDescription >= descriptionList.length ) {
+						currentPlayedDescription = currentPlayedDescription - 1;
+					}
+					document.getElementById("DescriptionDebug").innerHTML = "Waiting for " + descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
+				}
+			}
 
 		}
 		function repeatLastDescription() {
@@ -131,7 +171,7 @@
 					if ( myAudio.paused ) myAudio.play();
 					inInlineDescription = true;
 					currentPlayedDescription = lastDescriptionCurrent;
-					document.getElementById("DescriptionDebug").innerHTML = "Inline description " + currentPlayedDescription;
+					document.getElementById("DescriptionDebug").innerHTML = descriptionList[currentPlayedDescription][2] + " description " + currentPlayedDescription;
 				}
 			}
 		}
@@ -140,13 +180,6 @@
 
 <body onload="myAddListeners()">
 
-<!--
-	<video class="controller" controls autoplay mediagroup="described_video">
-		<source src="mediagroup.js/test/assets/popcorntest.mp4"></source>
-		<source src="mediagroup.js/test/assets/popcorntest.ogv"></source>
-		<source src="mediagroup.js/test/assets/popcorntest.webm"></source>
-	</video>
--->
 	<video class="controller" controls autoplay mediagroup="described_video">
 		<source src="http://archive.org/download/ElephantsDream/ed_1024_512kb.mp4"></source>
 		<source src="http://archive.org/download/ElephantsDream/ed_1024.ogv"></source>
