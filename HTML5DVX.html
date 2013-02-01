@@ -18,14 +18,14 @@
 		//     [3] URL of description clip
 		//     [4] options (e.g. "duck")
 		//
-		var descriptionList = [ [1.0, 7.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip001.wav", ""],
-		                        [11.0, 5.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip002.wav", ""],
-								[16.0, 5.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip003.wav", ""],
-								[28.0, 8.0, "extended", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipExtended1.wav", ""], 
-								[40.0, 6.0, "inline", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav", "duck"] ];
+		var descriptionList = [ [ 1.0, 7.0, "inline",   "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip001.wav",            ""],
+		                        [11.0, 5.0, "inline",   "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip002.wav",            ""],
+								[16.0, 5.0, "inline",   "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip003.wav",            ""],
+								[28.0, 8.0, "extended", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipExtended1.wav",      ""], 
+								[40.0, 6.0, "inline",   "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav", "duck"] ];
 
 		var audioDuckFactor = 0.25;	// Factor by which to duck the audio
-		var checkStartDescriptionRate = 10; // Number of times per second to check for the start of a description (more is better, but loads the browser more)
+		var checkStartDescriptionRate = 10; // Number of times per second to check for the start of a description
 
 		var currentDescription = 0;	// Index into descriptionList
 		var inInlineDescription = false;
@@ -50,10 +50,15 @@
 		}
 
 		function dvxAddListeners(){
-			descriptionAudio = document.createElement('audio');
-			
 			var describedVideo = document.getElementsByTagName('video')[0];
 
+			document.getElementById("DescriptionDebug").innerHTML = "The video is " + describedVideo.currentSrc;
+			
+			// At this point, we could communicate with the DVX server to get the clip list for this video
+
+			// Create the descriptionAudio element
+			descriptionAudio = document.createElement('audio');
+			
 			describedVideo.addEventListener('canplay', describedVideoCanplay, false);
 			// Instead of checking for a description start based on timeupdate events, which might be as slow as 1/4th second,
 			//  user our own timer so we can control the rate ourselves.
@@ -127,7 +132,7 @@
 					if ( descriptionAudio.paused ) descriptionAudio.play();
 					inInlineDescription = true;
 
-					document.getElementById("repeatLast").disabled = false;
+					document.getElementById("dvxSkipToRecent").disabled = false;
 
 					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentDescription][2] + " description " + currentDescription + " (" + descriptionList[currentDescription][4] + ")";
 				}
@@ -140,7 +145,7 @@
 					if ( descriptionAudio.paused ) descriptionAudio.play();
 					inExtendedDescription = true;
 
-					document.getElementById("repeatLast").disabled = false;
+					document.getElementById("dvxSkipToRecent").disabled = false;
 
 					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentDescription][2] + " description " + currentDescription;
 				}
@@ -199,7 +204,7 @@
 
 		}
 
-		function repeatLastDescription() {
+		function dvxSkipToRecentDescription() {
 			var describedVideo = document.getElementsByTagName('video')[0];
 
 			if ( recentDescription >= 0 ) {
@@ -223,6 +228,26 @@
 			}
 		}
 
+		function dvxSkipToNextDescription() {
+			var describedVideo = document.getElementsByTagName('video')[0];
+
+			// If we're in the middle of a description clip, pause it and treat it like the end of a clip
+			if ( inInlineDescription || inExtendedDescription ) {
+				if ( !descriptionAudio.paused ) descriptionAudio.pause();
+				DescriptionClipEnded();
+			}
+
+			describedVideo.currentTime = descriptionList[currentDescription][0];
+
+			descriptionAudio.src = descriptionList[currentDescription][3];
+			descriptionAudio.load();
+			descriptionAudio.pause();
+		
+			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription][3];
+
+			checkStartDescription();
+		}
+		
 	</script>
 </head>
 
@@ -237,7 +262,8 @@
 	<div class="video-player-controls">
 		<!-- Note: these buttons are accessible using "Alt-X" shortcuts -->
 		<input type="button" onclick="dvxPlayPause()" accesskey="p" value="Play/Pause">
-		<input type="button" onclick="repeatLastDescription()" accesskey="r" value="Skip to Recent Description" disabled id="repeatLast">
+		<input type="button" onclick="dvxSkipToRecentDescription()" accesskey="s" value="Skip to Recent Description" disabled id="dvxSkipToRecent">
+		<input type="button" onclick="dvxSkipToNextDescription()" accesskey="n" value="Skip to Next Description" id="dvxSkipToNext">
 		<div id="duckingControl"><input type="checkbox" onclick="autoDuckChanged()" accesskey="a" checked id="allowAutoDuck"> Allow automatic ducking</div>
 		<div class="video-player-debug">
 			<p id="loadStatus">MOVIE LOADING...</p>
