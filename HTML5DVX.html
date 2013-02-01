@@ -12,7 +12,11 @@
 	<script src="loadxmldoc.js"></script>
 	<script type="text/javascript">
 
-		xmlDoc=loadXMLDoc("ED.xml");
+		var dummyDVXUrl = "https://dl.dropbox.com/u/5295617/HTML5%20video/";
+	
+		// Get the description XML from "ED.xml". This code would be *much* cleaner if we used JSON instead of XML!
+		
+		xmlDoc=loadXMLDoc(dummyDVXUrl + "ED.xml");
 		clips=xmlDoc.getElementsByTagName("clip");
 
 		var descriptionList = new Array();
@@ -33,11 +37,11 @@
 		//     url:      URL of description clip
 		//     duck:     options (e.g. "duck")
 		//
-/*		var descriptionList = [ { start:  1.0, duration: 7.0, type: "inline",   url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip001.wav",            duck: ""},
-		                        { start: 11.0, duration: 5.0, type: "inline",   url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip002.wav",            duck: ""},
-								{ start: 16.0, duration: 5.0, type: "inline",   url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip003.wav",            duck: ""},
-								{ start: 28.0, duration: 8.0, type: "extended", url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipExtended1.wav",      duck: ""}, 
-								{ start: 40.0, duration: 6.0, type: "inline",   url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav", duck: "duck"} ];
+/*		var descriptionList = [ { start:  1.0, duration: 7.0, type: "inline",   url: dummyDVXUrl + "EDclip001.wav",            duck: ""},
+		                        { start: 11.0, duration: 5.0, type: "inline",   url: dummyDVXUrl + "EDclip002.wav",            duck: ""},
+								{ start: 16.0, duration: 5.0, type: "inline",   url: dummyDVXUrl + "EDclip003.wav",            duck: ""},
+								{ start: 28.0, duration: 8.0, type: "extended", url: dummyDVXUrl + "EDclipExtended1.wav",      duck: ""}, 
+								{ start: 40.0, duration: 6.0, type: "inline",   url: dummyDVXUrl + "EDclipInlineDucking1.wav", duck: "duck"} ];
 */
 
 		var audioDuckFactor = 0.25;	// Factor by which to duck the audio
@@ -268,6 +272,18 @@
 </head>
 
 <body onload="dvxAddListeners()">
+
+<!-- Try a YouTube iframe (this is "Big Buck Bunny", since "Elephants Dream" isn't on YouTube) -->
+<!--
+	<iframe width="640" height="390" src="http://www.youtube.com/embed/YE7VzlLtp-4&html5=1" frameborder="0" allowfullscreen></iframe>
+-->
+
+<!-- Try a Vimeo iframe -->
+<!--
+	<iframe src="http://player.vimeo.com/video/1132937" width="500" height="282" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe> <p><a href="http://vimeo.com/1132937">Elephants Dream</a> from <a href="http://vimeo.com/user508904">Blender Foundation</a> on <a href="http://vimeo.com">Vimeo</a>.</p>
+-->
+
+<!-- Try a plain HTML5 video tag -->
 
 	<video class="video-content" controls autoplay>
 		<source src="http://archive.org/download/ElephantsDream/ed_1024_512kb.mp4"></source>
