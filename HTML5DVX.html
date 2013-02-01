@@ -9,20 +9,36 @@
 	<meta name="description" content="Test use of the HTML5 video tag for DVX description of video">
 	<meta name="keywords" content="HTML5, video description, extended description, media, accessibility">
 
+	<script src="loadxmldoc.js"></script>
 	<script type="text/javascript">
-		// This structure should clearly be an XML file!! (See http://www.w3schools.com/dom/dom_loadxmldoc.asp for potential implementation)
+
+		xmlDoc=loadXMLDoc("ED.xml");
+		clips=xmlDoc.getElementsByTagName("clip");
+
+		var descriptionList = new Array();
+
+		for(i=0; i<clips.length; i++)
+		{
+			descriptionList.push( { start:    parseFloat((clips[i].getElementsByTagName("start")[0].childNodes[0].nodeValue)), 
+			                        duration: parseFloat((clips[i].getElementsByTagName("duration")[0].childNodes[0].nodeValue)),
+			                        type:     (clips[i].getElementsByTagName("type")[0].childNodes[0].nodeValue),
+			                        url:      (clips[i].getElementsByTagName("url")[0].childNodes[0].nodeValue),
+			                        duck:     ("true" == (clips[i].getElementsByTagName("duck")[0].childNodes[0].nodeValue)) } );
+		}
+
 		// Structure is:
-		//     [0] StartVideoTimecode (seconds)
-		//     [1] Duration (seconds) (Note that this is the maximum duration of the audio clip; it will play to completion, or until this time period expires)
-		//     [2] inline|extended
-		//     [3] URL of description clip
-		//     [4] options (e.g. "duck")
+		//     start:    StartVideoTimecode (seconds)
+		//     duration: Duration (seconds) (Note that this is the maximum duration of the audio clip; it will play to completion, or until this time period expires)
+		//     type:     inline|extended
+		//     url:      URL of description clip
+		//     duck:     options (e.g. "duck")
 		//
-		var descriptionList = [ [ 1.0, 7.0, "inline",   "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip001.wav",            ""],
-		                        [11.0, 5.0, "inline",   "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip002.wav",            ""],
-								[16.0, 5.0, "inline",   "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip003.wav",            ""],
-								[28.0, 8.0, "extended", "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipExtended1.wav",      ""], 
-								[40.0, 6.0, "inline",   "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav", "duck"] ];
+/*		var descriptionList = [ { start:  1.0, duration: 7.0, type: "inline",   url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip001.wav",            duck: ""},
+		                        { start: 11.0, duration: 5.0, type: "inline",   url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip002.wav",            duck: ""},
+								{ start: 16.0, duration: 5.0, type: "inline",   url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip003.wav",            duck: ""},
+								{ start: 28.0, duration: 8.0, type: "extended", url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipExtended1.wav",      duck: ""}, 
+								{ start: 40.0, duration: 6.0, type: "inline",   url: "https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav", duck: "duck"} ];
+*/
 
 		var audioDuckFactor = 0.25;	// Factor by which to duck the audio
 		var checkStartDescriptionRate = 10; // Number of times per second to check for the start of a description
@@ -77,11 +93,11 @@
 			inInlineDescription = false;
 			inExtendedDescription = false;
 
-			descriptionAudio.src = descriptionList[currentDescription][3];
+			descriptionAudio.src = descriptionList[currentDescription].url;
 			descriptionAudio.load();
 			descriptionAudio.pause();
 		
-			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription][3];
+			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription].url;
 		}
 
 		function dvxPlayPause() {
@@ -120,12 +136,12 @@
 			var describedVideo = document.getElementsByTagName('video')[0];
 
 			if ( !inInlineDescription && !inExtendedDescription ) {
-				if ( ( describedVideo.currentTime >= descriptionList[currentDescription][0] ) && ( describedVideo.currentTime < ( descriptionList[currentDescription][0] + descriptionList[currentDescription][1] ) ) && ( "inline" == descriptionList[currentDescription][2] ) ) {
+				if ( ( describedVideo.currentTime >= descriptionList[currentDescription].start ) && ( describedVideo.currentTime < ( descriptionList[currentDescription].start + descriptionList[currentDescription].duration ) ) && ( "inline" == descriptionList[currentDescription].type ) ) {
 					descriptionAudio.currentTime = 0;
 					recentDescription = currentDescription;
 
 					if ( document.getElementById("allowAutoDuck").checked ) {
-						if ( "duck" == descriptionList[currentDescription][4] ) {
+						if ( descriptionList[currentDescription].duck ) {
 							describedVideo.volume = describedVideo.volume * audioDuckFactor;	// Duck the main volume
 						}
 					}
@@ -134,10 +150,10 @@
 
 					document.getElementById("dvxSkipToRecent").disabled = false;
 
-					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentDescription][2] + " description " + currentDescription + " (" + descriptionList[currentDescription][4] + ")";
+					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentDescription].type + " description " + currentDescription + " (" + descriptionList[currentDescription].duck + ")";
 				}
 				
-				if ( ( describedVideo.currentTime >= descriptionList[currentDescription][0] ) && ( describedVideo.currentTime < ( descriptionList[currentDescription][0] + descriptionList[currentDescription][1] ) ) && ( "extended" == descriptionList[currentDescription][2] ) ) {
+				if ( ( describedVideo.currentTime >= descriptionList[currentDescription].start ) && ( describedVideo.currentTime < ( descriptionList[currentDescription].start + descriptionList[currentDescription].duration ) ) && ( "extended" == descriptionList[currentDescription].type ) ) {
 					descriptionAudio.currentTime = 0;
 					recentDescription = currentDescription;
 
@@ -147,7 +163,7 @@
 
 					document.getElementById("dvxSkipToRecent").disabled = false;
 
-					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentDescription][2] + " description " + currentDescription;
+					document.getElementById("DescriptionDebug").innerHTML = "Playing " + descriptionList[currentDescription].type + " description " + currentDescription;
 				}
 			}
 		}
@@ -158,7 +174,7 @@
 			if ( inInlineDescription ) {
 				inInlineDescription = false;
 				if ( document.getElementById("allowAutoDuck").checked ) {
-					if ( "duck" == descriptionList[currentDescription][4] ) {
+					if ( descriptionList[currentDescription].duck ) {
 						describedVideo.volume = describedVideo.volume / audioDuckFactor;	// Restore volume to previous value
 					}
 				}
@@ -172,13 +188,13 @@
 			if ( currentDescription >= descriptionList.length ) {
 				currentDescription = currentDescription - 1;
 			}
-			document.getElementById("DescriptionDebug").innerHTML = "Waiting for " + descriptionList[currentDescription][2] + " description " + currentDescription;
+			document.getElementById("DescriptionDebug").innerHTML = "Waiting for " + descriptionList[currentDescription].type + " description " + currentDescription;
 
-			descriptionAudio.src = descriptionList[currentDescription][3];
+			descriptionAudio.src = descriptionList[currentDescription].url;
 			descriptionAudio.load();
 			descriptionAudio.pause();
 		
-			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription][3];
+			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription].url;
 		}
 
 		function autoDuckChanged() {
@@ -186,12 +202,12 @@
 
 			if ( inInlineDescription ) {
 				if ( document.getElementById("allowAutoDuck").checked ) {
-					if ( "duck" == descriptionList[currentDescription][4] ) {
+					if ( descriptionList[currentDescription].duck ) {
 						// allowAutoDuck was checked during an inline description that allows ducking
 						describedVideo.volume = describedVideo.volume * audioDuckFactor;	// Duck the main volume
 					}
 				} else {
-					if ( "duck" == descriptionList[currentDescription][4] ) {
+					if ( descriptionList[currentDescription].duck ) {
 						// allowAutoDuck was unchecked during an inline description that was already ducked
 						describedVideo.volume = describedVideo.volume / audioDuckFactor;	// Restore volume to previous value
 					}
@@ -216,13 +232,13 @@
 
 				currentDescription = recentDescription;
 
-				describedVideo.currentTime = descriptionList[currentDescription][0];
+				describedVideo.currentTime = descriptionList[currentDescription].start;
 
-				descriptionAudio.src = descriptionList[currentDescription][3];
+				descriptionAudio.src = descriptionList[currentDescription].url;
 				descriptionAudio.load();
 				descriptionAudio.pause();
 			
-				document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription][3];
+				document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription].url;
 
 				checkStartDescription();
 			}
@@ -237,13 +253,13 @@
 				DescriptionClipEnded();
 			}
 
-			describedVideo.currentTime = descriptionList[currentDescription][0];
+			describedVideo.currentTime = descriptionList[currentDescription].start;
 
-			descriptionAudio.src = descriptionList[currentDescription][3];
+			descriptionAudio.src = descriptionList[currentDescription].url;
 			descriptionAudio.load();
 			descriptionAudio.pause();
 		
-			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription][3];
+			document.getElementById("DescriptionAudioDebug").innerHTML = "Loading audio clip " + descriptionList[currentDescription].url;
 
 			checkStartDescription();
 		}

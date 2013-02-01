@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- Created manually; ultimately, this will come from the dvx server. -->
+<dvx>
+	<video>
+			<source>http://archive.org/download/ElephantsDream/ed_1024_512kb.mp4</source>
+			<source>http://archive.org/download/ElephantsDream/ed_1024.ogv</source>
+			<source>http://archive.org/download/ElephantsDream/ed_1024.avi</source>
+	</video>
+<!--	<description> -->
+		<clip>
+			<url>https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip001.wav</url>
+			<start>1.0</start>
+			<duration>7.0</duration>
+			<type>inline</type>
+			<duck>false</duck>
+		</clip>
+		<clip>
+			<url>https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip002.wav</url>
+			<start>11.0</start>
+			<duration>5.0</duration>
+			<type>inline</type>
+			<duck>false</duck>
+		</clip>
+		<clip>
+			<url>https://dl.dropbox.com/u/5295617/HTML5%20video/EDclip003.wav</url>
+			<start>16.0</start>
+			<duration>5.0</duration>
+			<type>inline</type>
+			<duck>false</duck>
+		</clip>
+		<clip>
+			<url>https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipExtended1.wav</url>
+			<start>28.0</start>
+			<duration>8.0</duration>
+			<type>extended</type>
+			<duck>false</duck>
+		</clip>
+		<clip>
+			<url>https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav</url>
+			<start>40.0</start>
+			<duration>6.0</duration>
+			<type>inline</type>
+			<duck>true</duck>
+		</clip>
+		<clip>
+			<url>https://dl.dropbox.com/u/5295617/HTML5%20video/EDclipInlineDucking1.wav</url>
+			<start>50.0</start>
+			<duration>6.0</duration>
+			<type>inline</type>
+			<duck>false</duck>
+		</clip>
+<!--	</description> -->
+</dvx>
